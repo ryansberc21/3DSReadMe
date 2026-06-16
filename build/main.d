@@ -1,4 +1,4 @@
-main.o: C:/Users/ryans/3DSReadMe/source/main.c \
+main.o: C:/Users/ryans/3DSReadMe/3DSReadMe/source/main.c \
  C:/devkitPro/libctru/include/3ds.h \
  C:/devkitPro/libctru/include/3ds/types.h \
  C:/devkitPro/libctru/include/3ds/result.h \

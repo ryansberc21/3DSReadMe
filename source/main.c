@@ -5,10 +5,12 @@
 
 // Special thanks to Alex and Hank Johnson for letting me have so much fun for free and for being my guinea pigs for this app.
 
-
 #include <3ds.h>
 #include <stdio.h>
 #include <string.h>
+
+#define TOP_SCREEN_COLUMNS 50
+#define TOP_SCREEN_ROWS    30
 
 typedef enum {
     SCREEN_MAIN,
@@ -35,31 +37,87 @@ void clearScreen()
     printf("\x1b[1;1H");
 }
 
+void printAt(int row, int col, const char* text)
+{
+    if (row < 1) row = 1;
+    if (col < 1) col = 1;
+    printf("\x1b[%d;%dH%s", row, col, text);
+}
+
+void printCentered(int row, const char* text)
+{
+    int len = strlen(text);
+    int col = ((TOP_SCREEN_COLUMNS - len) / 2) + 1;
+
+    if (col < 1)
+        col = 1;
+
+    printAt(row, col, text);
+}
+
 void drawHeader()
 {
-    printf("Ryan's Modded 3DS Guide\n");
-    printf("by Ryan Bercich\n");
-	printf("16 June 2024\n");
-    printf("=======================\n\n");
+    printCentered(2, "Ryan's Modded 3DS Guide");
+    printCentered(3, "by Ryan Bercich");
+    printCentered(4, "16 June 2026");
+    printCentered(6, "==============================");
 }
 
 void drawControls()
 {
-    printf("\n\n");
-    printf("D-Pad: Move\n");
-    printf("A: Select\n");
-    printf("B: Back\n");
-    printf("START: Exit\n");
+    printCentered(27, "D-Pad: Move   A: Select   B: Back");
+    printCentered(28, "START: Exit");
+}
+
+void drawPageControls()
+{
+    printCentered(27, "B: Back");
+    printCentered(28, "START: Exit");
+}
+
+void drawSectionTitle(const char* title)
+{
+    printCentered(8, title);
+    printCentered(9, "------------------------------");
 }
 
 void drawMenu(const MenuItem* items, int count)
 {
+    int startRow = 12;
+    int startCol = 13;
+
     for (int i = 0; i < count; i++)
     {
+        printf("\x1b[%d;%dH", startRow + (i * 2), startCol);
+
         if (i == selected)
-            printf("> %s\n", items[i].label);
+            printf("> %-26s", items[i].label);
         else
-            printf("  %s\n", items[i].label);
+            printf("  %-26s", items[i].label);
+    }
+}
+
+void drawBodyText(const char* body)
+{
+    int row = 11;
+    int col = 3;
+    const char* p = body;
+
+    printf("\x1b[%d;%dH", row, col);
+
+    while (*p != '\0' && row < 26)
+    {
+        if (*p == '\n')
+        {
+            row++;
+            printf("\x1b[%d;%dH", row, col);
+        }
+        else
+        {
+            putchar(*p);
+        }
+
+        p++;
     }
 }
 
@@ -67,12 +125,9 @@ void drawTextPage(const char* title, const char* body)
 {
     clearScreen();
     drawHeader();
-
-    printf("%s\n", title);
-    printf("-----------------------\n\n");
-    printf("%s\n", body);
-
-    drawControls();
+    drawSectionTitle(title);
+    drawBodyText(body);
+    drawPageControls();
 }
 
 void setScreen(Screen next)
@@ -145,8 +200,7 @@ void drawCurrentScreen()
     }
     else if (currentScreen == SCREEN_INSTALLING_ROMS)
     {
-        printf("Installing new ROMs\n");
-        printf("-------------------\n\n");
+        drawSectionTitle("Installing new ROMs");
 
         MenuItem items[] = {
             {"Installing CIAs", SCREEN_INSTALLING_CIAS},
@@ -158,8 +212,7 @@ void drawCurrentScreen()
     }
     else if (currentScreen == SCREEN_THEMES)
     {
-        printf("Themes\n");
-        printf("-------------------\n\n");
+        drawSectionTitle("Themes");
 
         MenuItem items[] = {
             {"Theme setup", SCREEN_THEMES_ETC}
@@ -181,11 +234,11 @@ void drawCurrentScreen()
             "- TWiLight Menu++ launches DS games.\n"
             "- Anemone3DS manages themes.\n\n"
             "Important folders:\n"
-            "/roms/nds/   DS games\n"
-            "/cias/       CIA installers\n"
-            "/3ds/        Homebrew apps\n"
-            "/_nds/       DS launcher files\n"
-            "/luma/       Custom firmware files"
+            "/roms/nds/     DS games\n"
+            "/cias/         CIA installers\n"
+            "/3ds/          Homebrew apps\n"
+            "/_nds/         DS launcher files\n"
+            "/luma/         Custom firmware files"
         );
     }
     else if (currentScreen == SCREEN_INSTALLING_CIAS)
@@ -193,11 +246,11 @@ void drawCurrentScreen()
         drawTextPage(
             "Installing CIAs",
             "CIA files are installed using FBI.\n"
-			"The FBI App is located in the \'System\' folder.\n\n"
+            "FBI is located in the System folder.\n\n"
             "Steps:\n"
             "1. Power off the 3DS.\n"
             "2. Put the SD card in a computer.\n"
-            "3. Copy the .cia file to /cias/ Folder.\n"
+            "3. Copy the .cia file to /cias/.\n"
             "4. Safely eject the SD card.\n"
             "5. Put the SD card back in the 3DS.\n"
             "6. Open FBI.\n"
@@ -219,10 +272,10 @@ void drawCurrentScreen()
             "To make a HOME Menu forwarder:\n"
             "1. Open Homebrew Launcher.\n"
             "2. Open NDSForwarder.\n"
-            "3. Select the .nds game in the directory you placed it in.\n"
-            "4. Forward the selected game (*NOTE: If you are forwarding a ROMhack,\n"
-			"check the box to create a custom name. Give it a unique name).\n"
-            "5. Check HOME Menu for a wrapped gift.\n\n"
+            "3. Select the .nds game.\n"
+            "4. For ROM hacks, use a custom name.\n"
+            "5. Give it a unique title.\n"
+            "6. Check HOME Menu for a wrapped gift.\n\n"
             "If the icon does not appear, reboot."
         );
     }
@@ -232,13 +285,14 @@ void drawCurrentScreen()
             "Theme Setup",
             "Themes are managed with Anemone3DS.\n\n"
             "To install themes:\n"
-            "1. Go to \'themeplaza.art\' and scan the QR code of the theme you want.\n"
-            "2. Select the new theme and Press A, then UP for full download.\n"
-            "3. Enjoy!.\n"
-            "You can switch themes at any time, as well as shuffle them \n"
-			"so each time you power the console on, it will be different.\n"
-            "Reboot if things do not work right away.\n\n"
-            "Do not delete system theme data unless you know what it is."
+            "1. Go to themeplaza.art.\n"
+            "2. Scan the QR code for a theme.\n"
+            "3. Select the theme in Anemone3DS.\n"
+            "4. Press A, then UP for full install.\n\n"
+            "You can switch themes at any time.\n"
+            "You can also shuffle themes so each\n"
+            "startup can use a different one.\n\n"
+            "Reboot if things do not work right away."
         );
     }
 }

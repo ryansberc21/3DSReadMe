@@ -1,0 +1,22 @@
+# 3DS build outputs
+*.cia
+*.elf
+*.3dsx
+*.smdh
+
+# Build folders
+/build/
+build/
+
+# Object/dependency files
+*.o
+*.d
+
+# Binary/map files
+*.map
+*.bin
+*.lst
+
+# OS junk
+.DS_Store
+Thumbs.db
